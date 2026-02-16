@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Telegram Inquiries Dashboard</title>
+    <!-- Bootstrap CSS for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .table-responsive {
+            max-height: 500px; /* scrollable table */
+            overflow-y: auto;
+            margin-bottom: 30px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #fff;
+            padding: 10px;
+        }
+        table th, table td {
+            vertical-align: middle;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .status-pending { background-color: #fff3cd !important; }
+        .status-resolved { background-color: #d4edda !important; }
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5rem; }
+            table th, table td { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1>📋 Telegram Inquiries Dashboard</h1>
+
+        <div class="d-flex justify-content-start mb-3 flex-wrap">
+            <a href="/export" class="btn btn-primary mb-2">Export as CSV</a>
+        </div>
+
+        <!-- Scrollable Table -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle text-center">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Username</th>
+                        <th>User ID</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Admin Reply</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inquiry in inquiries %}
+                    <tr class="status-{{ inquiry.status }}">
+                        <td>{{ inquiry._id }}</td>
+                        <td>{{ inquiry.username }}</td>
+                        <td>{{ inquiry.user_id }}</td>
+                        <td>{{ inquiry.message }}</td>
+                        <td>{{ inquiry.status | capitalize }}</td>
+                        <td>{{ inquiry.admin_reply or "" }}</td>
+                        <td>{{ inquiry.timestamp }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

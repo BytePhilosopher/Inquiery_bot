@@ -2,78 +2,149 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Telegram Inquiries Dashboard</title>
-    <!-- Bootstrap CSS for styling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inquiry Bot Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            padding: 20px;
-            background-color: #f8f9fa;
+        body { background-color: #f0f2f5; }
+        .navbar { background: linear-gradient(135deg, #1a1a2e, #16213e); }
+        .stat-card { border: none; border-radius: 12px; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card .icon { font-size: 2rem; opacity: 0.85; }
+        .table-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            overflow: hidden;
         }
-        h1 {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .table-responsive {
-            max-height: 500px; /* scrollable table */
-            overflow-y: auto;
-            margin-bottom: 30px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            background-color: #fff;
-            padding: 10px;
-        }
-        table th, table td {
-            vertical-align: middle;
-            text-align: center;
-            white-space: nowrap;
-        }
-        .status-pending { background-color: #fff3cd !important; }
-        .status-resolved { background-color: #d4edda !important; }
-        @media (max-width: 768px) {
-            h1 { font-size: 1.5rem; }
-            table th, table td { font-size: 0.9rem; }
-        }
+        .table thead th { background: #1a1a2e; color: #fff; border: none; font-weight: 500; }
+        .table td { vertical-align: middle; }
+        .badge-pending  { background-color: #ffc107; color: #212529; }
+        .badge-resolved { background-color: #198754; }
+        tr.pending-row  { background-color: #fffbea; }
+        tr.resolved-row { background-color: #f0faf4; }
+        .msg-cell { max-width: 260px; white-space: normal; word-break: break-word; }
+        .ticket-id { font-family: monospace; font-weight: 600; color: #6c757d; }
+        .filter-btn.active { box-shadow: 0 0 0 2px #1a1a2e; }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <h1>📋 Telegram Inquiries Dashboard</h1>
 
-        <div class="d-flex justify-content-start mb-3 flex-wrap">
-            <a href="/export" class="btn btn-primary mb-2">Export as CSV</a>
+<!-- Navbar -->
+<nav class="navbar navbar-dark px-4 py-3">
+    <span class="navbar-brand fw-bold fs-5">📋 Inquiry Bot Dashboard</span>
+    <a href="/export" class="btn btn-sm btn-outline-light">⬇ Export CSV</a>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-4">
+            <div class="stat-card card text-white" style="background: linear-gradient(135deg,#667eea,#764ba2);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">ጠቅላላ ጥቆማዎች</div>
+                        <div class="fs-2 fw-bold">{{ total }}</div>
+                    </div>
+                    <div class="icon">📊</div>
+                </div>
+            </div>
         </div>
+        <div class="col-12 col-sm-4">
+            <div class="stat-card card text-dark" style="background: linear-gradient(135deg,#f6d365,#fda085);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-dark-50 small" style="opacity:.75">በመጠባበቅ</div>
+                        <div class="fs-2 fw-bold">{{ pending }}</div>
+                    </div>
+                    <div class="icon">⏳</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="stat-card card text-white" style="background: linear-gradient(135deg,#43e97b,#38f9d7);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">ተፈትቷል</div>
+                        <div class="fs-2 fw-bold">{{ resolved }}</div>
+                    </div>
+                    <div class="icon">✅</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Scrollable Table -->
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped align-middle text-center">
-                <thead class="table-dark sticky-top">
+    <!-- Filter Buttons -->
+    <div class="d-flex gap-2 mb-3 flex-wrap">
+        <button class="btn btn-sm btn-outline-secondary filter-btn active" onclick="filterTable('all', this)">All</button>
+        <button class="btn btn-sm btn-outline-warning filter-btn" onclick="filterTable('pending', this)">Pending</button>
+        <button class="btn btn-sm btn-outline-success filter-btn" onclick="filterTable('resolved', this)">Resolved</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+        <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
+            <table class="table table-hover mb-0" id="inquiryTable">
+                <thead>
                     <tr>
-                        <th>Ticket ID</th>
-                        <th>Username</th>
+                        <th>#</th>
+                        <th>ትኬት ID</th>
+                        <th>ተጠቃሚ</th>
                         <th>User ID</th>
-                        <th>Message</th>
-                        <th>Status</th>
-                        <th>Admin Reply</th>
-                        <th>Timestamp</th>
+                        <th>ጥቆማ</th>
+                        <th>ሁኔታ</th>
+                        <th>ምላሽ</th>
+                        <th>ቀን</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for inquiry in inquiries %}
-                    <tr class="status-{{ inquiry.status }}">
-                        <td>{{ inquiry._id }}</td>
-                        <td>{{ inquiry.username }}</td>
-                        <td>{{ inquiry.user_id }}</td>
-                        <td>{{ inquiry.message }}</td>
-                        <td>{{ inquiry.status | capitalize }}</td>
-                        <td>{{ inquiry.admin_reply or "" }}</td>
-                        <td>{{ inquiry.timestamp }}</td>
+                    <tr class="{{ inquiry.status }}-row" data-status="{{ inquiry.status }}">
+                        <td class="text-muted small">{{ loop.index }}</td>
+                        <td class="ticket-id">#{{ inquiry.id }}</td>
+                        <td>
+                            {% if inquiry.username %}
+                            <span class="fw-semibold">@{{ inquiry.username }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ inquiry.user_id }}</td>
+                        <td class="msg-cell">{{ inquiry.message }}</td>
+                        <td>
+                            <span class="badge badge-{{ inquiry.status }}">
+                                {{ "ተፈቷል" if inquiry.status == "resolved" else "በመጠባበቅ" }}
+                            </span>
+                        </td>
+                        <td class="msg-cell text-muted small">{{ inquiry.admin_reply or "—" }}</td>
+                        <td class="text-muted small text-nowrap">
+                            {{ inquiry.created_at[:16].replace("T", " ") if inquiry.created_at else "—" }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">ምንም ጥቆማ አልተገኘም።</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
+    <p class="text-muted small mt-2">ጠቅላላ {{ total }} ጥቆማዎች ተገኝተዋል። ለዝማኔ ገጹን አድስ።</p>
+</div>
+
+<script>
+function filterTable(status, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('#inquiryTable tbody tr[data-status]').forEach(row => {
+        row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+    });
+}
+</script>
+
 </body>
 </html>
-    

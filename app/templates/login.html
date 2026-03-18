@@ -138,7 +138,12 @@
     <div class="title">Welcome back</div>
     <div class="subtitle">Sign in to the Inquiry Bot admin panel</div>
 
-    {% if error %}
+    {% if rate_limited %}
+    <div class="error-box" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.25);color:#fcd34d;">
+        <i data-lucide="shield-alert"></i>
+        Too many attempts. Please wait 5 minutes and try again.
+    </div>
+    {% elif error %}
     <div class="error-box">
         <i data-lucide="alert-circle"></i>
         Incorrect password. Please try again.

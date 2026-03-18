@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ code }} — Inquiry Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fa; color: #0f172a;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card {
+            background: #fff; border: 1px solid #e8edf2;
+            border-radius: 18px; padding: 48px 40px;
+            max-width: 420px; width: 100%; text-align: center;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        }
+        .icon-wrap {
+            width: 60px; height: 60px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .icon-wrap.err-404 { background: #eef2ff; color: #6366f1; }
+        .icon-wrap.err-500 { background: #fee2e2; color: #ef4444; }
+        .icon-wrap [data-lucide] { width: 28px; height: 28px; }
+        .code { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 8px; }
+        h1   { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        p    { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 28px; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 10px 22px; border-radius: 9px;
+            background: #0f172a; color: #fff;
+            font-size: 13.5px; font-weight: 500; font-family: 'Inter', sans-serif;
+            text-decoration: none; border: none; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn:hover { background: #1e293b; }
+        .btn [data-lucide] { width: 14px; height: 14px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="icon-wrap {% if code == 404 %}err-404{% else %}err-500{% endif %}">
+        {% if code == 404 %}
+        <i data-lucide="file-question"></i>
+        {% else %}
+        <i data-lucide="alert-triangle"></i>
+        {% endif %}
+    </div>
+    <div class="code">Error {{ code }}</div>
+    <h1>{% if code == 404 %}Page Not Found{% else %}Server Error{% endif %}</h1>
+    <p>{{ message }}</p>
+    <a href="/" class="btn"><i data-lucide="arrow-left"></i> Back to Dashboard</a>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

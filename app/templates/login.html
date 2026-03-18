@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — Inquiry Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: #0f172a;
+            position: relative; overflow: hidden;
+        }
+
+        body::before, body::after {
+            content: ''; position: absolute; border-radius: 50%;
+            filter: blur(90px); opacity: 0.12; pointer-events: none;
+        }
+        body::before { width: 520px; height: 520px; background: #6366f1; top: -120px; left: -120px; }
+        body::after  { width: 420px; height: 420px; background: #8b5cf6; bottom: -100px; right: -100px; }
+
+        .card {
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.07);
+            backdrop-filter: blur(24px);
+            border-radius: 22px;
+            padding: 48px 42px;
+            width: 100%; max-width: 410px;
+            position: relative; z-index: 1;
+            animation: fadeUp 0.35s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-wrap {
+            display: flex; justify-content: center; margin-bottom: 26px;
+        }
+        .logo {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 28px rgba(99,102,241,0.45);
+        }
+        .logo svg { color: #fff; width: 26px; height: 26px; }
+
+        .title    { font-size: 22px; font-weight: 700; color: #f1f5f9; text-align: center; margin-bottom: 5px; }
+        .subtitle { font-size: 13.5px; color: #64748b; text-align: center; margin-bottom: 32px; }
+
+        .error-box {
+            display: flex; align-items: center; gap: 9px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.22);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 13px; color: #fca5a5;
+            margin-bottom: 20px;
+        }
+        .error-box svg { flex-shrink: 0; width: 15px; height: 15px; }
+
+        .field { margin-bottom: 18px; }
+        label {
+            display: block; font-size: 12.5px; font-weight: 500;
+            color: #94a3b8; margin-bottom: 7px; letter-spacing: 0.02em;
+        }
+
+        .input-wrap { position: relative; }
+        .input-icon {
+            position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+            pointer-events: none; color: #475569;
+            display: flex; align-items: center;
+        }
+        .input-icon svg { width: 15px; height: 15px; }
+
+        input[type="password"], input[type="text"] {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1.5px solid rgba(255,255,255,0.09);
+            border-radius: 10px;
+            padding: 11px 40px 11px 40px;
+            font-size: 14px; color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input::placeholder { color: #3f5068; }
+        input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+        }
+
+        .toggle-btn {
+            position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: #475569; padding: 4px;
+            display: flex; align-items: center;
+            transition: color 0.15s; border-radius: 5px;
+        }
+        .toggle-btn:hover { color: #94a3b8; }
+        .toggle-btn svg { width: 15px; height: 15px; }
+
+        .btn-login {
+            width: 100%; padding: 12px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none; border-radius: 10px;
+            color: #fff; font-size: 14.5px; font-weight: 600;
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            margin-top: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 18px rgba(99,102,241,0.38);
+            transition: opacity 0.2s, transform 0.15s;
+        }
+        .btn-login:hover  { opacity: 0.91; }
+        .btn-login:active { transform: scale(0.98); }
+        .btn-login svg { width: 16px; height: 16px; }
+
+        .footer-note {
+            text-align: center; font-size: 11.5px;
+            color: #1e293b; margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="logo-wrap">
+        <div class="logo">
+            <i data-lucide="message-square"></i>
+        </div>
+    </div>
+    <div class="title">Welcome back</div>
+    <div class="subtitle">Sign in to the Inquiry Bot admin panel</div>
+
+    {% if error %}
+    <div class="error-box">
+        <i data-lucide="alert-circle"></i>
+        Incorrect password. Please try again.
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/login">
+        <div class="field">
+            <label for="pwField">Password</label>
+            <div class="input-wrap">
+                <span class="input-icon"><i data-lucide="lock"></i></span>
+                <input type="password" name="password" id="pwField"
+                       placeholder="Enter your password" autofocus autocomplete="current-password">
+                <button type="button" class="toggle-btn" id="toggleBtn" onclick="togglePw()" title="Toggle visibility">
+                    <i data-lucide="eye" id="eyeIcon"></i>
+                </button>
+            </div>
+        </div>
+        <button type="submit" class="btn-login">
+            <i data-lucide="log-in"></i> Sign In
+        </button>
+    </form>
+
+    <div class="footer-note">Inquiry Bot &copy; 2025 &mdash; Admin access only</div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    function togglePw() {
+        const f = document.getElementById('pwField');
+        const shown = f.type === 'text';
+        f.type = shown ? 'password' : 'text';
+        document.getElementById('eyeIcon').setAttribute('data-lucide', shown ? 'eye' : 'eye-off');
+        lucide.createIcons();
+    }
+</script>
+</body>
+</html>

@@ -7,8 +7,8 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-SUPABASE_URL = os.getenv("https://ihqcfcqwbqhnnurdgqyr.supabase.co")
-SUPABASE_KEY = os.getenv("sb_publishable_IXAkdApoOwRimycG48tY5w_9yxda8mg")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
@@ -54,6 +54,16 @@ def resolve_inquiry(inquiry_id: int, reply: str) -> dict | None:
         .execute()
     )
     return result.data[0] if result.data else None
+
+
+def delete_inquiry(inquiry_id: int) -> bool:
+    result = (
+        supabase.table("inquiries")
+        .delete()
+        .eq("id", inquiry_id)
+        .execute()
+    )
+    return len(result.data) > 0
 
 
 def get_user_inquiries(user_id: int) -> list:

@@ -3,148 +3,603 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inquiry Bot Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Dashboard — Inquiry Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
-        body { background-color: #f0f2f5; }
-        .navbar { background: linear-gradient(135deg, #1a1a2e, #16213e); }
-        .stat-card { border: none; border-radius: 12px; transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-3px); }
-        .stat-card .icon { font-size: 2rem; opacity: 0.85; }
-        .table-wrapper {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
-            overflow: hidden;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:      #f5f7fa;
+            --sidebar: #0f172a;
+            --white:   #ffffff;
+            --border:  #e8edf2;
+            --text:    #0f172a;
+            --muted:   #64748b;
+            --light:   #94a3b8;
+            --indigo:  #6366f1;
+            --purple:  #8b5cf6;
+            --amber:   #f59e0b;
+            --green:   #22c55e;
+            --red:     #ef4444;
         }
-        .table thead th { background: #1a1a2e; color: #fff; border: none; font-weight: 500; }
-        .table td { vertical-align: middle; }
-        .badge-pending  { background-color: #ffc107; color: #212529; }
-        .badge-resolved { background-color: #198754; }
-        tr.pending-row  { background-color: #fffbea; }
-        tr.resolved-row { background-color: #f0faf4; }
-        .msg-cell { max-width: 260px; white-space: normal; word-break: break-word; }
-        .ticket-id { font-family: monospace; font-weight: 600; color: #6c757d; }
-        .filter-btn.active { box-shadow: 0 0 0 2px #1a1a2e; }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+        /* ── Icon sizing ──────────────────────────────────── */
+        [data-lucide] { width: 16px; height: 16px; stroke-width: 1.75; display: inline-block; vertical-align: middle; }
+        .icon-sm  [data-lucide], [data-lucide].icon-sm  { width: 14px; height: 14px; }
+        .icon-md  [data-lucide], [data-lucide].icon-md  { width: 18px; height: 18px; }
+        .icon-lg  [data-lucide], [data-lucide].icon-lg  { width: 22px; height: 22px; }
+        .icon-xl  [data-lucide], [data-lucide].icon-xl  { width: 28px; height: 28px; }
+
+        /* ── Sidebar ──────────────────────────────────────── */
+        .sidebar {
+            width: 256px; min-height: 100vh;
+            background: var(--sidebar);
+            position: fixed; top: 0; left: 0;
+            display: flex; flex-direction: column; z-index: 50;
+        }
+        .sidebar-top {
+            padding: 22px 18px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .brand { display: flex; align-items: center; gap: 11px; }
+        .brand-icon {
+            width: 38px; height: 38px; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+            color: #fff;
+        }
+        .brand-text h1 { font-size: 14.5px; font-weight: 700; color: #f1f5f9; }
+        .brand-text p  { font-size: 11px; color: #475569; margin-top: 1px; }
+
+        .sidebar-body { flex: 1; padding: 14px 12px; overflow-y: auto; }
+        .nav-label {
+            font-size: 10px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.08em; color: #334155; padding: 10px 8px 5px;
+        }
+        .nav-btn {
+            display: flex; align-items: center; gap: 9px;
+            width: 100%; padding: 8px 10px; border: none; background: none;
+            cursor: pointer; border-radius: 8px;
+            font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500;
+            color: #64748b; text-align: left; text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: #cbd5e1; }
+        .nav-btn.active { background: rgba(99,102,241,0.18); color: #a5b4fc; }
+        .nav-btn [data-lucide] { width: 15px; height: 15px; flex-shrink: 0; }
+        .nav-pill {
+            margin-left: auto; background: var(--red);
+            color: #fff; font-size: 10px; font-weight: 700;
+            padding: 1px 7px; border-radius: 99px; line-height: 1.6;
+        }
+
+        .sidebar-footer {
+            padding: 14px 18px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .user-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 10px; border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+        }
+        .user-avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+        }
+        .user-info { flex: 1; min-width: 0; }
+        .user-info strong { display: block; font-size: 12.5px; font-weight: 600; color: #e2e8f0; }
+        .user-info span   { font-size: 11px; color: #475569; }
+        .logout-btn {
+            background: none; border: none; cursor: pointer; padding: 5px;
+            color: #475569; border-radius: 6px; display: flex;
+            align-items: center; transition: color 0.15s, background 0.15s;
+        }
+        .logout-btn:hover { color: var(--red); background: rgba(239,68,68,0.1); }
+        .logout-btn [data-lucide] { width: 15px; height: 15px; }
+
+        /* ── Main ─────────────────────────────────────────── */
+        .main { margin-left: 256px; }
+
+        .topbar {
+            background: var(--white); border-bottom: 1px solid var(--border);
+            padding: 0 32px; height: 62px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 40;
+        }
+        .topbar-left h2 { font-size: 16px; font-weight: 700; }
+        .topbar-left p  { font-size: 12px; color: var(--muted); margin-top: 1px; }
+        .topbar-right   { display: flex; align-items: center; gap: 10px; }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 8px;
+            font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+            cursor: pointer; border: none; text-decoration: none; transition: all 0.15s;
+        }
+        .btn [data-lucide] { width: 14px; height: 14px; }
+        .btn-ghost   { background: none; border: 1.5px solid var(--border); color: var(--muted); }
+        .btn-ghost:hover { border-color: var(--indigo); color: var(--indigo); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
+            color: #fff; box-shadow: 0 2px 10px rgba(99,102,241,0.3);
+        }
+        .btn-primary:hover { opacity: 0.9; }
+
+        /* ── Content ──────────────────────────────────────── */
+        .content { padding: 28px 32px; }
+
+        /* ── Stats ────────────────────────────────────────── */
+        .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-bottom: 26px; }
+        .stat-card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px 24px;
+            display: flex; align-items: center; gap: 18px;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .stat-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.07); transform: translateY(-2px); }
+        .stat-icon {
+            width: 50px; height: 50px; border-radius: 13px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .stat-icon.indigo { background: #eef2ff; color: var(--indigo); }
+        .stat-icon.amber  { background: #fef3c7; color: var(--amber); }
+        .stat-icon.green  { background: #dcfce7; color: var(--green); }
+        .stat-icon [data-lucide] { width: 22px; height: 22px; stroke-width: 2; }
+        .stat-lbl { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .stat-num { font-size: 30px; font-weight: 800; color: var(--text); line-height: 1; }
+        .stat-sub { font-size: 11.5px; color: var(--light); margin-top: 4px; }
+
+        /* ── Toolbar ──────────────────────────────────────── */
+        .toolbar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
+        }
+        .search-wrap { position: relative; }
+        .search-icon {
+            position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+            color: var(--light); pointer-events: none;
+            display: flex; align-items: center;
+        }
+        .search-icon [data-lucide] { width: 15px; height: 15px; }
+        .search-wrap input {
+            background: var(--white); border: 1.5px solid var(--border);
+            border-radius: 9px; padding: 8px 14px 8px 36px;
+            font-size: 13.5px; font-family: 'Inter', sans-serif;
+            color: var(--text); width: 250px; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-wrap input:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .search-wrap input::placeholder { color: var(--light); }
+
+        .filter-tabs { display: flex; gap: 4px; }
+        .tab {
+            padding: 7px 16px; border-radius: 8px;
+            font-size: 13px; font-weight: 500;
+            border: 1.5px solid transparent;
+            background: none; cursor: pointer;
+            font-family: 'Inter', sans-serif; color: var(--muted);
+            transition: all 0.15s;
+        }
+        .tab:hover { background: var(--white); border-color: var(--border); }
+        .tab.active-all      { background: var(--text); color: #fff; border-color: var(--text); }
+        .tab.active-pending  { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .tab.active-resolved { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+
+        /* ── Table ────────────────────────────────────────── */
+        .table-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .table-wrap { overflow-x: auto; max-height: 560px; overflow-y: auto; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead { position: sticky; top: 0; z-index: 5; }
+        thead th {
+            background: #f8fafc; color: #475569;
+            font-size: 11.5px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 11px 18px; border-bottom: 1px solid var(--border);
+            white-space: nowrap; text-align: left;
+        }
+        tbody td {
+            padding: 13px 18px; border-bottom: 1px solid #f1f5f9;
+            font-size: 13.5px; color: #334155; vertical-align: middle;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr { transition: background 0.1s; }
+        tbody tr:hover td { background: #fafbff; }
+
+        .ticket-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #f1f5f9; border: 1px solid #e2e8f0;
+            color: #475569; font-size: 12px; font-weight: 600;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            padding: 3px 9px; border-radius: 6px;
+        }
+        .ticket-chip [data-lucide] { width: 11px; height: 11px; color: #94a3b8; }
+
+        .user-cell { display: flex; align-items: center; gap: 10px; }
+        .row-avatar {
+            width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12.5px; font-weight: 700; color: #fff;
+        }
+        .row-name { font-size: 13px; font-weight: 600; color: var(--text); }
+        .row-uid  { font-size: 11px; color: var(--light); }
+
+        .msg-txt { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 11px; border-radius: 99px;
+            font-size: 11.5px; font-weight: 600;
+        }
+        .pill [data-lucide] { width: 11px; height: 11px; }
+        .pill.pending  { background: #fef3c7; color: #92400e; }
+        .pill.resolved { background: #dcfce7; color: #166534; }
+
+        .reply-preview { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 12.5px; }
+        .no-reply { color: #cbd5e1; font-size: 20px; line-height: 1; }
+
+        .date-txt { font-size: 12px; color: var(--light); white-space: nowrap; }
+
+        .del-btn {
+            width: 30px; height: 30px; border-radius: 7px;
+            border: 1.5px solid transparent; background: none;
+            color: #cbd5e1; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; opacity: 0;
+        }
+        tr:hover .del-btn { opacity: 1; }
+        .del-btn:hover { border-color: var(--red); color: var(--red); background: #fee2e2; }
+        .del-btn [data-lucide] { width: 14px; height: 14px; }
+
+        .empty { text-align: center; padding: 64px 20px; }
+        .empty-icon {
+            width: 56px; height: 56px; border-radius: 14px;
+            background: #f1f5f9; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 14px; color: var(--light);
+        }
+        .empty-icon [data-lucide] { width: 26px; height: 26px; }
+        .empty h3 { font-size: 15px; font-weight: 600; color: var(--muted); }
+        .empty p  { font-size: 13px; color: var(--light); margin-top: 4px; }
+
+        /* ── Delete modal ─────────────────────────────────── */
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4); z-index: 200;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .overlay.show { display: flex; }
+        .modal {
+            background: var(--white); border-radius: 18px;
+            padding: 32px 28px; max-width: 380px; width: 100%;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.16);
+            animation: popIn 0.2s ease;
+        }
+        @keyframes popIn { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } }
+
+        .modal-icon-wrap {
+            width: 54px; height: 54px; border-radius: 14px;
+            background: #fee2e2; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 18px; color: var(--red);
+        }
+        .modal-icon-wrap [data-lucide] { width: 26px; height: 26px; }
+        .modal h3 { font-size: 17px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+        .modal p  { font-size: 13.5px; color: var(--muted); text-align: center; line-height: 1.6; margin-bottom: 24px; }
+        .modal-btns { display: flex; gap: 10px; }
+        .btn-cancel {
+            flex: 1; padding: 10px; border-radius: 9px;
+            border: 1.5px solid var(--border); background: none;
+            color: var(--muted); font-size: 13.5px; font-weight: 500;
+            font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-cancel:hover { border-color: var(--light); }
+        .btn-del-confirm {
+            flex: 1; padding: 10px; border-radius: 9px; border: none;
+            background: var(--red); color: #fff; font-size: 13.5px; font-weight: 600;
+            font-family: 'Inter', sans-serif; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            transition: background 0.15s;
+        }
+        .btn-del-confirm:hover    { background: #dc2626; }
+        .btn-del-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-del-confirm [data-lucide] { width: 14px; height: 14px; }
+
+        /* ── Responsive ───────────────────────────────────── */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .stats-row { grid-template-columns: repeat(2,1fr); }
+            .content { padding: 18px; }
+        }
+        @media (max-width: 560px) {
+            .stats-row { grid-template-columns: 1fr; }
+            .search-wrap input { width: 100%; }
+            .topbar { padding: 0 16px; }
+        }
     </style>
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand fw-bold fs-5">📋 Inquiry Bot Dashboard</span>
-    <a href="/export" class="btn btn-sm btn-outline-light">⬇ Export CSV</a>
-</nav>
-
-<div class="container-fluid px-4 py-4">
-
-    <!-- Stats Row -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-4">
-            <div class="stat-card card text-white" style="background: linear-gradient(135deg,#667eea,#764ba2);">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-white-50 small">ጠቅላላ ጥቆማዎች</div>
-                        <div class="fs-2 fw-bold">{{ total }}</div>
-                    </div>
-                    <div class="icon">📊</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-sm-4">
-            <div class="stat-card card text-dark" style="background: linear-gradient(135deg,#f6d365,#fda085);">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-dark-50 small" style="opacity:.75">በመጠባበቅ</div>
-                        <div class="fs-2 fw-bold">{{ pending }}</div>
-                    </div>
-                    <div class="icon">⏳</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-sm-4">
-            <div class="stat-card card text-white" style="background: linear-gradient(135deg,#43e97b,#38f9d7);">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-white-50 small">ተፈትቷል</div>
-                        <div class="fs-2 fw-bold">{{ resolved }}</div>
-                    </div>
-                    <div class="icon">✅</div>
-                </div>
+<!-- ── Sidebar ────────────────────────────────────────── -->
+<aside class="sidebar">
+    <div class="sidebar-top">
+        <div class="brand">
+            <div class="brand-icon"><i data-lucide="message-square" class="icon-md"></i></div>
+            <div class="brand-text">
+                <h1>Inquiry Bot</h1>
+                <p>Admin Dashboard</p>
             </div>
         </div>
     </div>
 
-    <!-- Filter Buttons -->
-    <div class="d-flex gap-2 mb-3 flex-wrap">
-        <button class="btn btn-sm btn-outline-secondary filter-btn active" onclick="filterTable('all', this)">All</button>
-        <button class="btn btn-sm btn-outline-warning filter-btn" onclick="filterTable('pending', this)">Pending</button>
-        <button class="btn btn-sm btn-outline-success filter-btn" onclick="filterTable('resolved', this)">Resolved</button>
+    <div class="sidebar-body">
+        <div class="nav-label">Inquiries</div>
+        <button class="nav-btn active" id="nav-all" onclick="filter('all')">
+            <i data-lucide="layout-dashboard"></i> All Inquiries
+            {% if total > 0 %}<span class="nav-pill">{{ total }}</span>{% endif %}
+        </button>
+        <button class="nav-btn" id="nav-pending" onclick="filter('pending')">
+            <i data-lucide="clock"></i> Pending
+            {% if pending > 0 %}<span class="nav-pill">{{ pending }}</span>{% endif %}
+        </button>
+        <button class="nav-btn" id="nav-resolved" onclick="filter('resolved')">
+            <i data-lucide="check-circle-2"></i> Resolved
+        </button>
+
+        <div class="nav-label">Tools</div>
+        <a href="/export" class="nav-btn"><i data-lucide="download"></i> Export CSV</a>
+        <button class="nav-btn" onclick="location.reload()"><i data-lucide="refresh-cw"></i> Refresh</button>
     </div>
 
-    <!-- Table -->
-    <div class="table-wrapper">
-        <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
-            <table class="table table-hover mb-0" id="inquiryTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>ትኬት ID</th>
-                        <th>ተጠቃሚ</th>
-                        <th>User ID</th>
-                        <th>ጥቆማ</th>
-                        <th>ሁኔታ</th>
-                        <th>ምላሽ</th>
-                        <th>ቀን</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for inquiry in inquiries %}
-                    <tr class="{{ inquiry.status }}-row" data-status="{{ inquiry.status }}">
-                        <td class="text-muted small">{{ loop.index }}</td>
-                        <td class="ticket-id">#{{ inquiry.id }}</td>
-                        <td>
-                            {% if inquiry.username %}
-                            <span class="fw-semibold">@{{ inquiry.username }}</span>
-                            {% else %}
-                            <span class="text-muted">—</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-muted small">{{ inquiry.user_id }}</td>
-                        <td class="msg-cell">{{ inquiry.message }}</td>
-                        <td>
-                            <span class="badge badge-{{ inquiry.status }}">
-                                {{ "ተፈቷል" if inquiry.status == "resolved" else "በመጠባበቅ" }}
-                            </span>
-                        </td>
-                        <td class="msg-cell text-muted small">{{ inquiry.admin_reply or "—" }}</td>
-                        <td class="text-muted small text-nowrap">
-                            {{ inquiry.created_at[:16].replace("T", " ") if inquiry.created_at else "—" }}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-5">ምንም ጥቆማ አልተገኘም።</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="sidebar-footer">
+        <div class="user-row">
+            <div class="user-avatar">A</div>
+            <div class="user-info">
+                <strong>Admin</strong>
+                <span>Signed in</span>
+            </div>
+            <a href="/logout" class="logout-btn" title="Sign out"><i data-lucide="log-out"></i></a>
+        </div>
+    </div>
+</aside>
+
+<!-- ── Main ──────────────────────────────────────────── -->
+<div class="main">
+
+    <div class="topbar">
+        <div class="topbar-left">
+            <h2>Inquiries</h2>
+            <p>Manage and respond to user submissions</p>
+        </div>
+        <div class="topbar-right">
+            <button class="btn btn-ghost" onclick="location.reload()">
+                <i data-lucide="refresh-cw"></i> Refresh
+            </button>
+            <a href="/export" class="btn btn-primary">
+                <i data-lucide="download"></i> Export CSV
+            </a>
         </div>
     </div>
 
-    <p class="text-muted small mt-2">ጠቅላላ {{ total }} ጥቆማዎች ተገኝተዋል። ለዝማኔ ገጹን አድስ።</p>
+    <div class="content">
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon indigo"><i data-lucide="bar-chart-2"></i></div>
+                <div>
+                    <div class="stat-lbl">Total</div>
+                    <div class="stat-num">{{ total }}</div>
+                    <div class="stat-sub">All time inquiries</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon amber"><i data-lucide="clock"></i></div>
+                <div>
+                    <div class="stat-lbl">Pending</div>
+                    <div class="stat-num">{{ pending }}</div>
+                    <div class="stat-sub">Awaiting response</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i data-lucide="check-circle-2"></i></div>
+                <div>
+                    <div class="stat-lbl">Resolved</div>
+                    <div class="stat-num">{{ resolved }}</div>
+                    <div class="stat-sub">
+                        {% if total > 0 %}{{ ((resolved / total) * 100) | round(0) | int }}% resolution rate{% else %}—{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-wrap">
+                <span class="search-icon"><i data-lucide="search"></i></span>
+                <input type="text" id="searchInput" placeholder="Search by user or message…" oninput="applyFilters()">
+            </div>
+            <div class="filter-tabs">
+                <button class="tab active-all" id="tab-all"      onclick="filter('all')">All <span style="opacity:.55">{{ total }}</span></button>
+                <button class="tab"            id="tab-pending"  onclick="filter('pending')">Pending <span style="opacity:.55">{{ pending }}</span></button>
+                <button class="tab"            id="tab-resolved" onclick="filter('resolved')">Resolved <span style="opacity:.55">{{ resolved }}</span></button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div class="table-wrap">
+                <table id="inqTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>User</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Reply</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inq in inquiries %}
+                        <tr data-status="{{ inq.status }}"
+                            data-user="{{ (inq.username or '') | lower }}"
+                            data-msg="{{ (inq.message or '') | lower }}">
+                            <td>
+                                <span class="ticket-chip">
+                                    <i data-lucide="hash"></i>{{ inq.id }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="row-avatar">{{ (inq.username or '?')[0] | upper }}</div>
+                                    <div>
+                                        <div class="row-name">{% if inq.username %}@{{ inq.username }}{% else %}Unknown{% endif %}</div>
+                                        <div class="row-uid">{{ inq.user_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><div class="msg-txt" title="{{ inq.message }}">{{ inq.message }}</div></td>
+                            <td>
+                                {% if inq.status == "resolved" %}
+                                <span class="pill resolved">
+                                    <i data-lucide="check-circle-2"></i> Resolved
+                                </span>
+                                {% else %}
+                                <span class="pill pending">
+                                    <i data-lucide="clock"></i> Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if inq.admin_reply %}
+                                <div class="reply-preview" title="{{ inq.admin_reply }}">{{ inq.admin_reply }}</div>
+                                {% else %}
+                                <span class="no-reply">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="date-txt">{{ inq.created_at[:16].replace("T"," ") if inq.created_at else "—" }}</span>
+                            </td>
+                            <td>
+                                <button class="del-btn" data-id="{{ inq.id }}" onclick="askDelete(this.dataset.id)" title="Delete">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr id="emptyRow">
+                            <td colspan="7">
+                                <div class="empty">
+                                    <div class="empty-icon"><i data-lucide="inbox"></i></div>
+                                    <h3>No inquiries yet</h3>
+                                    <p>Messages sent to your bot will appear here.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── Delete modal ──────────────────────────────────── -->
+<div class="overlay" id="overlay">
+    <div class="modal">
+        <div class="modal-icon-wrap"><i data-lucide="trash-2"></i></div>
+        <h3>Delete this inquiry?</h3>
+        <p>This will permanently remove the record from the database and cannot be undone.</p>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-del-confirm" id="confirmBtn" onclick="doDelete()">
+                <i data-lucide="trash-2"></i> Delete
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
-function filterTable(status, btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    lucide.createIcons();
 
-    document.querySelectorAll('#inquiryTable tbody tr[data-status]').forEach(row => {
-        row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
-    });
-}
+    let currentFilter = 'all';
+    let pendingId     = null;
+
+    function filter(status) {
+        currentFilter = status;
+        document.querySelectorAll('.nav-btn[id^="nav-"]').forEach(b => b.classList.remove('active'));
+        const nb = document.getElementById('nav-' + status);
+        if (nb) nb.classList.add('active');
+
+        document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
+        const tb = document.getElementById('tab-' + status);
+        if (tb) tb.classList.add('active-' + status);
+
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        let visible = 0;
+        document.querySelectorAll('#inqTable tbody tr[data-status]').forEach(row => {
+            const ok = (currentFilter === 'all' || row.dataset.status === currentFilter)
+                    && (!q || row.dataset.user.includes(q) || row.dataset.msg.includes(q));
+            row.style.display = ok ? '' : 'none';
+            if (ok) visible++;
+        });
+        const old = document.getElementById('noResults');
+        if (old) old.remove();
+        if (visible === 0 && document.querySelectorAll('#inqTable tbody tr[data-status]').length > 0) {
+            const tbody = document.querySelector('#inqTable tbody');
+            const tr = document.createElement('tr');
+            tr.id = 'noResults';
+            tr.innerHTML = `<td colspan="7"><div class="empty">
+                <div class="empty-icon"><i data-lucide="search-x"></i></div>
+                <h3>No results found</h3><p>Try a different search or filter.</p>
+            </div></td>`;
+            tbody.appendChild(tr);
+            lucide.createIcons();
+        }
+    }
+
+    function askDelete(id) {
+        pendingId = id;
+        document.getElementById('overlay').classList.add('show');
+    }
+    function closeModal() {
+        pendingId = null;
+        document.getElementById('overlay').classList.remove('show');
+    }
+    async function doDelete() {
+        if (!pendingId) return;
+        const btn = document.getElementById('confirmBtn');
+        btn.innerHTML = 'Deleting…'; btn.disabled = true;
+        try {
+            const res = await fetch('/inquiry/' + pendingId, { method: 'DELETE' });
+            if (res.ok) {
+                const row = document.querySelector('button[data-id="' + pendingId + '"]').closest('tr');
+                row.style.transition = 'opacity 0.25s, transform 0.25s';
+                row.style.opacity = '0'; row.style.transform = 'translateX(12px)';
+                setTimeout(() => row.remove(), 260);
+                closeModal();
+            } else { alert('Could not delete. Please try again.'); }
+        } catch { alert('Network error. Please try again.'); }
+        finally { btn.innerHTML = '<i data-lucide="trash-2"></i> Delete'; btn.disabled = false; lucide.createIcons(); }
+    }
+
+    document.getElementById('overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 </script>
-
 </body>
 </html>

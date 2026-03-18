@@ -86,41 +86,44 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     display_name = user.username or user.first_name or str(user.id)
     logger.info(f"[Message] @{display_name} ({user.id}): {update.message.text}")
 
+    # ── Step 1: Save to DB and confirm to user ──────────────────
     try:
-        inquiry = insert_inquiry(
+        inquiry   = insert_inquiry(
             user_id=user.id,
             username=display_name,
             message=update.message.text,
         )
         ticket_id = inquiry["id"]
-
-        await update.message.reply_text(
-            f"✅ *ጥቆማዎትን ተቀብለናል!*\n\n"
-            f"🎫 ትኬት ቁጥር: *#{ticket_id}*\n"
-            f"ቡድናችን በቅርቡ ምላሽ ይሰጥዎታል።\n\n"
-            f"_ትኬቱን ለማረጋገጥ /status ይላኩ_",
-            parse_mode="Markdown",
-        )
         logger.info(f"[DB] Inquiry #{ticket_id} saved")
-
-        # Notify admin
-        await context.bot.send_message(
-            chat_id=ADMIN_ID,
-            text=(
-                f"📨 *አዲስ ጥቆማ ደረሰ!*\n\n"
-                f"👤 ተጠቃሚ: @{display_name} (ID: `{user.id}`)\n"
-                f"🎫 ትኬት: *#{ticket_id}*\n"
-                f"💬 ጥቆማ:\n{update.message.text}\n\n"
-                f"_ምላሽ ለመስጠት:_\n`/reply {ticket_id} ምላሽዎ`"
-            ),
-            parse_mode="Markdown",
-        )
-
     except Exception as e:
-        logger.error(f"[Error] Failed to save inquiry: {e}")
+        logger.error(f"[DB] Failed to save inquiry: {e}")
         await update.message.reply_text(
             "❌ ይቅርታ! ጥቆማዎ አልተቀበለም። እባክዎ እንደገና ይሞክሩ።"
         )
+        return
+
+    await update.message.reply_text(
+        f"✅ *ጥቆማዎትን ተቀብለናል!*\n\n"
+        f"🎫 ትኬት ቁጥር: *#{ticket_id}*\n"
+        f"ቡድናችን በቅርቡ ምላሽ ይሰጥዎታል።\n\n"
+        f"_ትኬቱን ለማረጋገጥ /status ይላኩ_",
+        parse_mode="Markdown",
+    )
+
+    # ── Step 2: Notify admin (failure is silent to the user) ────
+    try:
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=(
+                f"📨 አዲስ ጥቆማ ደረሰ!\n\n"
+                f"👤 ተጠቃሚ: @{display_name} (ID: {user.id})\n"
+                f"🎫 ትኬት: #{ticket_id}\n"
+                f"💬 ጥቆማ:\n{update.message.text}\n\n"
+                f"ምላሽ ለመስጠት:\n/reply {ticket_id} ምላሽዎ"
+            ),
+        )
+    except Exception as e:
+        logger.error(f"[Admin] Failed to notify admin for ticket #{ticket_id}: {e}")
 
 
 # ── Admin Commands ─────────────────────────────────────────────────────────────

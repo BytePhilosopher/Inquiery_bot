@@ -37,7 +37,14 @@ if not ADMIN_ID:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "👋 *እንኳን ደህና መጡ!*\n\n"
-        "ጥያቄዎትን ወይም ጥቆማዎትን ይላኩ። ቡድናችን በፍጥነት ምላሽ ይሰጥዎታል።\n\n"
+        "ጥያቄዎትን ወይም ጥቆማዎትን ለመላክ፣ እባክዎ የሚከተሉትን መረጃዎች በመልዕክትዎ ውስጥ ያካትቱ:\n\n"
+        "📋 *የሚያስፈልጉ መረጃዎች:*\n"
+        "• *ስም:* ሙሉ ስምዎ\n"
+        "• *ጾታ:* ወንድ / ሴት\n"
+        "• *ወደ ኮሌጅ የገቡበት ዓመት:* (ለምሳሌ፦ 2015)\n"
+        "• *ክፍለ ትምህርት (ዲፓርትመንት):* የሚማሩበት ዲፓርትመንት\n"
+        "• *መኖሪያ:* አሁን የሚኖሩበት ቦታ\n"
+        "• *ጥያቄ / ጥቆማ:* ለማቅረብ የፈለጉት ጉዳይ\n\n"
         "📌 ትኬቱን ለማወቅ /status ይጠቀሙ።\n"
         "❓ ለእርዳታ /help ይጠቀሙ።",
         parse_mode="Markdown",
@@ -47,9 +54,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "ℹ️ *እርዳታ*\n\n"
-        "• ጥያቄዎትን ወይም ጥቆማዎትን ይላኩ — ቡድናችን ምላሽ ይሰጥዎታል\n"
+        "ጥያቄ ወይም ጥቆማ ሲልኩ፣ መልዕክትዎ የተጠቋሚውን እነዚህን መረጃዎች ማካተት አለበት:\n\n"
+        "1️⃣ *ስም* — ሙሉ ስም\n"
+        "2️⃣ *ጾታ* — ወንድ ወይም ሴት\n"
+        "3️⃣ *ወደ ኮሌጅ የገቡበት ዓመት* — ለምሳሌ: 2015\n"
+        "4️⃣ *ክፍለ ትምህርት (ዲፓርትመንት)* — የሚማሩበት ዲፓርትመንት\n"
+        "5️⃣ *መኖሪያ* — አሁን የሚኖሩበት ቦታ\n"
+        "6️⃣ *ጥያቄ / ጥቆማ* — ለማቅረብ የፈለጉት ጉዳይ\n\n"
+        "*ምሳሌ:*\n"
+        "ስም: አበበ ከበደ\n"
+        "ጾታ: ወንድ\n"
+        "ዓመት: 2015\n"
+        "ዲፓርትመንት: Computer Science\n"
+        "መኖሪያ: አዲስ አበባ\n"
+        "ጥያቄ: ...\n\n"
         "• /status — የቅርብ ጊዜ ትኬቶቻቸውን ያሳያል\n"
-        "• /start — እንኳን ደህና ይምጡ",
+        "• /start — ዳግም ለመጀመር",
         parse_mode="Markdown",
     )
 
@@ -122,8 +142,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"ምላሽ ለመስጠት:\n/reply {ticket_id} ምላሽዎ"
             ),
         )
+        logger.info(f"[Admin] Notified admin of ticket #{ticket_id}")
     except Exception as e:
-        logger.error(f"[Admin] Failed to notify admin for ticket #{ticket_id}: {e}")
+        logger.error(f"[Admin] Failed to notify admin for ticket #{ticket_id}: {type(e).__name__}: {e}")
 
 
 # ── Admin Commands ─────────────────────────────────────────────────────────────
